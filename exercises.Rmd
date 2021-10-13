@@ -1,0 +1,179 @@
+---
+title: "Network analysis"
+author: "Wlad Stroukov"
+date: "13/10/2021"
+output: html_document
+---
+
+# Refresher on R data structures
+## Vectors
+```{r}
+v1 <- 1:5  
+v2 <- 5:1
+v3 <- c(3,1,5,4,2)
+cor(v1,v3)
+
+
+(v1>2) | (v2>0)   # | is the boolean OR, returns a vector.
+(v1>2) & (v2>0)   # & is the boolean AND, returns a vector.
+(v1>2) || (v2>0)  # || is the boolean OR, returns a single value
+(v1>2) && (v2>0)  # && is the boolean AND, ditto
+
+v3
+length(v3) <- 10
+v3
+
+```
+
+## Factors
+```{r}
+
+eye.col.v <- c("brown", "green", "brown", "blue", "blue", "blue")         #vector
+eye.col.f <- factor(c("brown", "green", "brown", "blue", "blue", "blue")) #factor
+eye.col.v
+eye.col.f
+levels(eye.col.f)
+as.numeric(eye.col.f)
+as.numeric(eye.col.v)
+as.character(eye.col.f)  
+```
+
+## Matrices and Arrays
+Matrix 2D vectors
+Arrays >2D
+```{r}
+m <- 1:20 # 20 elements 
+m
+dim(m) <- c(5,4) # Dimensions set to 5 & 4, so m is now a 5x4 matrix
+m
+
+m <-  matrix(data=1:20, nrow=5, ncol=4)
+m
+m <- matrix(1:20,5,4)
+m
+
+m <- cbind(1:5, 5:1, 5:9) # column bind
+m
+m <- rbind(1:5, 5:1, 5:9) # row bind
+m
+
+m <- matrix(1:100,10,10)
+m
+m[2,3]
+m[2,]
+m[1:4,2]
+m[-1:-3,] # all rows except 1st to 3rd one
+
+m[1,] == m[1,]
+m >3
+
+m[m>3]
+
+t(m)
+mt <- t(m)
+mt
+
+m %*% mt # matrix multiplication
+m*mt     # element-wise multiplication
+
+
+a <- array(data=1:18, dim=c(3,3,2))
+a
+```
+## Lists
+```{r}
+l1 <-  list(boo=v1,foo=v2,moo=v3,zoo="Animals!") 
+l2 <- list(v1,v2,v3,"Animals!")
+
+l3 <- list()
+l4 <- NULL
+
+l1["zoo"] # returns a list
+l1[["zoo"]] # returns the numeric element in the list (e.g. numeric vector, character, etc)
+l1[1]    # 1st element
+l1[[1]]
+l1$boo   # $ operator is equivalent to [[]]
+
+l3[[1]] <- 11
+l3
+
+l4[[3]] <- c(22,23) # coerces empty object into list and adds an element. unassigned elements will be generated and empty (NULL)
+
+l1[[5]] <- "more elements"
+l1[[8]] <- 1:5
+l1
+
+l1$something <- "A thing"
+l1
+names(l1) <- c("a","b","c","d","e","f","g","h","i")
+l1
+```
+## DataFrames
+```{r}
+df1 <- data.frame(ID=1:4,
+                  FirstName=c("John", "Jim", "Jane","Jill"),
+                  Female=c(F,F,T,T),
+                  Age=c(22,33,44,55),
+                  stringsAsFactors = T)
+
+df1["FirstName"] # get column
+df1$FirstName
+df1[["FirstName"]]
+
+df1$FirstName <-  as.vector(df1$FirstName)
+
+
+df1[1,]
+df1[,1]
+df1[1:2,3:4]
+
+df1[df1$Age >30 ,2] # names of everyone over 30
+
+mean(df1[df1$Female==T,4]) # Mean age of female entries
+
+
+```
+## Flow control
+```{r}
+x <- 5; y <- 10
+if (x==0) y <- 0 else y <- y/x
+y
+
+
+
+ASum <- 0; AProd <- 1
+for (i in 1:x)
+{
+  ASum <- ASum +1
+  AProd <- AProd * i
+}
+ASum
+AProd
+prod(1:x)
+
+
+
+x <- 5
+while(x > 0){
+  print(x)
+  x <- x-1
+  }
+
+
+
+x <-0
+repeat{
+  print(x) 
+  x <- x+1 
+  if(x>10) break
+}
+
+
+
+```
+
+
+
+
+
+
