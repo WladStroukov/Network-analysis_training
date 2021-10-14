@@ -168,12 +168,146 @@ repeat{
   if(x>10) break
 }
 
+```
+# Networks
+```{r}
+rm(list=ls())
+library(igraph)
+```
 
-
+## Create networks
+```{r}
+g1 <- graph(edges=c(1,2, 2,3, 3,1), directed=F) # undirected graph with 3 edges. Numbers are interpreted as Vertex IDs: 1->2, 2->3, 3->1
+plot(g1)
+# class(g1)
+# g1
 ```
 
 
 
+```{r}
+g2 <- graph(edges=c(1,2, 2,3, 3,1), n=10) # 10 vertices
+plot(g2)
+# g2
+```
+
+```{r}
+g3 <- graph(c("John","Jim", "Jim","Jill", "Jill","John", "John","Jill")) # with named vertices the argument "n" appears to be ignored. 
+plot(g3)
+```
+The edge.curved argument of the `plot()` function adds a curve to the edge, but can mask edges due to overlay. There are supposed to be 2 edges from Jim to Jack.
+```{r}
+g4 <- graph(c("John", "Jim", "Jim", "Jack", "Jim", "Jack", "John", "John"),
+            isolates=c("Jesse","Janis","Jennifer", "Justin"))
+g4
+#plot(g4)
+plot(g4, edge.arrow.size=.5, vertex.color="gold", vertex.size=15,
+     vertex.frame.color="gray", vertex.label.color="black",
+     vertex.label.cex=0.8, vertex.label.dist=2, edge.curved=0.5) 
 
 
+```
+As in the example above, in most R functions, you can use named colors, hex, or rgb values. For example: “blue” “dark red” “#557799” or rgb(.25, .5, .3)) You can see the built-in colors name with `colors()`  
 
+Small graphs can also be generated with a description of this kind: - for undirected tie, +- or -+
+for directed ties pointing left & right, ++ for a symmetric tie, and “:” for sets of vertices.
+```{r}
+plot(graph_from_literal(a----b, b----c)) # the number of dashes doesn't matter
+plot(graph_from_literal(a+b, b+c))
+plot(graph_from_literal(a+-+b, b+-+c))
+plot(graph_from_literal(a+-b, b+-c))
+
+
+plot(graph_from_literal(a1:a2:a3--b1:b2:b3)) # sets of vertices with undirected edges
+plot(graph_from_literal(a1:a2:a3--+b1:b2:b3, c--a1:a2:b3)) # it appears that all edges the either directed or undirected. Otherwise the undirected edges are ignored
+plot(graph_from_literal(a1:a2:a3--+b1:b2:b3, c--+a1:a2:b3))
+
+plot(graph_from_literal(a-b-c-d-e-f, a-g-h-b, h-e:f:i, j))
+```
+## Edge, vertex, and network attributes
+```{r}
+g4 <- graph(c("John", "Jim", "Jim", "Jack", "Jim", "Jack", "John", "John"),
+            isolates=c("Jesse","Janis","Jennifer", "Justin"))
+plot(g4)
+
+```
+```{r}
+E(g4) # Edges
+V(g4) # Vertices
+
+g4[] # show as matrix
+g4[1,]
+```
+Add attributes to the network, vertices, or edges:
+```{r}
+V(g4)$name # automatically generated when the network was created
+```
+examine attributes
+```{r}
+edge_attr(g4) # emtpy list
+```
+Assign new attributes to vertices and edges
+```{r}
+V(g4)$gender <- c("male","male","male","female","female","female", "male")
+E(g4)$type <- "email" # Edge attribute "email" is assigned to all edges
+E(g4)$weight <- 10    # Edge weight, setting all existing edges to 10
+```
+
+Check Edge attributes
+```{r}
+edge_attr(g4)
+```
+Check Vertex attributes
+```{r}
+vertex_attr(g4)
+```
+Check graph attributes (empty names list before adding attributes)
+```{r}
+graph_attr(g4)
+```
+Alternative way for adding attributes (set_edge_attr(), set_vertex_attr(), etc. )
+```{r}
+g4 <- set_graph_attr(g4, "name", "Email Network")
+g4 <- set_graph_attr(g4, "something", "A thing")
+graph_attr_names(g4)
+```
+Get individual graph attributes
+```{r}
+graph_attr(g4, "something")
+graph_attr(g4)
+```
+```{r}
+g4 <- delete_graph_attr(g4, "something")
+graph_attr(g4)
+```
+Plot and color vertices by gender
+```{r}
+#c( "pink", "skyblue")[1+(V(g4)$gender=="male")] # how to select color
+plot(g4, edge.arrow.size=.5, vertex.label.color="black", vertex.label.dist=1.5,
+     vertex.color=c( "pink", "skyblue")[1+(V(g4)$gender=="male")] )
+
+```
+
+The graph g4 has two edges going from Jim to Jack, and a loop from John to himself. We can simplify our graph to remove loops & multiple edges between the same nodes. Use edge.attr.comb to indicate how edge attributes are to be combined - possible options include sum, mean, prod (product), min, max, first/last (selects the first/last edge’s attribute). Option “ignore” says the attribute should be disregarded and dropped.
+```{r}
+g4s <- simplify(g4, remove.multiple = T, remove.loops = F, edge.attr.comb=c(weight="sum", type="ignore"))
+g4s
+plot(g4s, vertex.label.dist=1.5)
+```
+The description of an igraph object starts with up to four letters:  
+
+  1. D or U, for a directed or undirected graph
+  2. N for a named graph (where nodes have a name attribute)
+  3. W for a weighted graph (where edges have a weight attribute)
+  4. B for a bipartite (two-mode) graph (where nodes have a type attribute)
+
+The two numbers that follow (7 5) refer to the number of nodes and edges in the graph. The description also lists node & edge attributes, for example:  
+
+  * (g/c) - graph-level character attribute
+  * (v/c) - vertex-level character attribute
+  * (e/n) - edge-level numeric attribute
+
+## Specific graphs and graph models
+```{r}
+
+```
