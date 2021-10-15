@@ -518,6 +518,139 @@ plot(net2.bp$proj2, vertex.label.color="black", vertex.label.dist=1,
      vertex.size=7, vertex.label=nodes2$media[ is.na(nodes2$media.type)])
 ```
 
-
 # Plotting network data
+
+Plotting with igraph: the network plots have a wide set of parameters you can set. Those include node options (starting with vertex.) and edge options (starting with edge.). A list of selected options is included below, but you can also check out `?igraph.plotting` for more information.  
+
+## Plotting parameters
+
+|**NODES**           |                 |
+|:-------------------|:----------------|
+|vertex.color        |     Node color  |
+|vertex.frame.color  | Node border color |
+|vertex.shape        | One of “none”, “circle”, “square”, “csquare”, “rectangle”, “crectangle”, “vrectangle”, “pie”, “raster”, or “sphere”|
+|vertex.size         | Size of the node (default is 15)|
+|vertex.size2        | The second size of the node (e.g. for a rectangle)|
+|vertex.label        | Character vector used to label the nodes|
+|vertex.label.family | Font family of the label (e.g.“Times”, “Helvetica”)|
+|vertex.label.font   | Font: 1 plain, 2 bold, 3, italic, 4 bold italic, 5 symbol|
+|vertex.label.cex    | Font size (multiplication factor, device-dependent)|
+|vertex.label.dist   | Distance between the label and the vertex|
+|vertex.label.degree | The position of the label in relation to the vertex, where 0 right, “pi” is left, “pi/2” is below, and “-pi/2” is above|
+|**EDGES**         |                    |
+|edge.color        | Edge color |
+|edge.width        | Edge width, defaults to 1 |
+|edge.arrow.size   | Arrow size, defaults to 1 |
+|edge.arrow.width  | Arrow width, defaults to 1 |
+|edge.lty          | Line type, could be 0 or “blank”, 1 or “solid”, 2 or “dashed”, 3 or “dotted”, 4 or “dotdash”, 5 or “longdash”, 6 or “twodash” |
+|edge.label        | Character vector used to label edges |
+|edge.label.family | Font family of the label (e.g.“Times”, “Helvetica”) |
+|edge.label.font   | Font: 1 plain, 2 bold, 3, italic, 4 bold italic, 5 symbol |
+|edge.label.cex    | Font size for edge labels |
+|edge.curved       | Edge curvature, range 0-1 (FALSE sets it to 0, TRUE to 0.5) |
+|arrow.mode        | Vector specifying whether edges should have arrows, possible values: 0 no arrow, 1 back, 2 forward, 3 both |
+|**OTHER** |  |
+|margin | Empty space margins around the plot, vector with length 4 |
+|frame  | if TRUE, the plot will be framed |
+|main   | If set, adds a title to the plot |
+|sub    | If set, adds a subtitle to the plot |
+
+We can set the node & edge options in two ways - the first one is to specify them in the plot()
+function, as we are doing below.
+```{r}
+plot(net, edge.arrow.size=.4, edge.curved=.1)
+```
+```{r}
+# Set edge color to gray, and the node color to orange.
+# Replace the vertex label with the node names stored in "media"
+
+# as_data_frame(net, what = "both")
+# V(net)$media
+# V(net)$type.label
+
+plot(net, edge.arrow.size=.2, edge.curved=0, 
+     vertex.color="orange", vertex.frame.color="#555555",
+     vertex.label=V(net)$media, vertex.label.color="black",
+     vertex.label.cex=.7)
+
+#plot(net, edge.arrow.size=.2, edge.curved=0, vertex.color="orange", vertex.frame.color="#555555", vertex.label=V(net)$type.label, vertex.label.color="black", vertex.label.cex=.7)
+
+```
+The second way to set attributes is to add them to the igraph object. Let’s say we want to color our network nodes based on type of media, and size them based on audience size (larger audience -> larger node). We will also change the width of the edges based on their weight.
+```{r}
+# Generate colors based on media type:
+colrs <- c("gray50", "tomato", "gold")
+```
+
+The attributes added to the network need to have specific names and don't have to be specified again in the `plot()` function.
+```{r}
+# Select colors by media type
+#V(net)$media.type # access vertex media type attribute. 
+V(net)$color <- colrs[V(net)$media.type]
+
+# Set node size based on audience size:
+V(net)$size <- V(net)$audience.size*0.7
+vertex_attr(net)
+
+# The labels are currently node IDs
+# Setting them to NA will render no labels:
+V(net)$label.color <- "black"
+V(net)$label <- NA
+
+# change arrow size and edge color:
+E(net)$arrow.size <- .2
+E(net)$edge.color <- "gray80"
+
+E(net)$width <- 1+E(net)$weight/12
+#edge_attr(net)
+plot(net)
+```
+The network layout can be adjusted as well
+```{r}
+graph_attr(net, "layout") <- layout_with_lgl
+plot(net)
+```
+Attributes from the network can be overwritten in the `plot()` function
+```{r}
+plot(net, edge.color="orange", vertex.color="gray50")
+```
+Adding a legend
+```{r}
+plot(net)
+legend(x=-1.5, y=-1.1, c("Newspaper", "Television", "Online News"), pch=21, col="gray90", pt.bg = colrs, pt.cex=2, cex = .8, ncol=1)
+```
+For semantic networks, we may be interested in plotting only the labels of the nodes:
+```{r}
+plot(net, vertex.shape="none", vertex.label=V(net)$media, vertex.label.font=2, vertex.label.color="gray40", vertex.label.cex=.7, edge.color="gray85")
+```
+Let’s color the edges of the graph based on their source node color. We can get the starting node for each edge with the `ends()` igraph function.
+```{r dpi=500}
+#ends(net, es=E(net), names=T)
+edge.start <- ends(net, es=E(net), names=F)[,1]
+edge.col <- V(net)$color[edge.start]
+plot(net, edge.color=edge.col, edge.curved=.2)
+```
+
+## Network Layouts
+```{r}
+```
+
+```{r}
+```
+
+```{r}
+```
+
+```{r}
+```
+
+```{r}
+```
+
+```{r}
+```
+
+```{r}
+```
+
 
