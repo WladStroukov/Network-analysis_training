@@ -632,25 +632,207 @@ plot(net, edge.color=edge.col, edge.curved=.2)
 ```
 
 ## Network Layouts
+Network layouts are simply algorithms that return coordinates for each node in a network. For the purposes of exploring layouts, we will generate a slightly larger 80-node graph. We use the sample_pa() function which generates a simple graph starting from one node and adding more nodes and links based on a preset level of preferential attachment (Barabasi-Albert model).
 ```{r}
+net.bg <- sample_pa(80)
+V(net.bg)$size <- 8
+V(net.bg)$frame.color <- "white"
+V(net.bg)$color <- "orange"
+V(net.bg)$label <- ""
+E(net.bg)$arrow.mode <- 0
+
+plot(net.bg)
+```
+Setting the layout in the plot function
+```{r}
+plot(net.bg,layout=layout_randomly)
+```
+Calculating the vertex coordinates in advance
+```{r}
+l1 <- layout_randomly(net.bg) # random layout
+l2 <- layout_in_circle(net.bg)
+plot(net.bg, layout=l2)
+
+```
+l1 and l2 are matrices of x, y coordinates (N x 2) for the N nodes in the graph. You can easily
+generate your own:
+```{r}
+#vcount(net.bg) # count vertices
+l <- cbind(1:vcount(net.bg), c(1,vcount(net.bg):2)) # generate x,y coordinates for 80 vertices
+plot(net.bg, layout=l)
+```
+Further build-in layouts
+```{r}
+par(mfrow=c(1,3), mar=c(0,0,0,0))
+# Randomly placed vertices
+l <- layout_randomly(net.bg)
+plot(net.bg, layout=l)
+
+# Circle layout
+l <- layout_in_circle(net.bg)
+plot(net.bg, layout=l)
+
+# 3D sphere layout
+l <- layout_on_sphere(net.bg)
+plot(net.bg, layout=l)
+
+```
+Fruchterman-Reingold is one of the most used force-directed layout algorithms out there.  
+
+Force-directed layouts try to get a nice-looking graph where edges are similar in length and cross each other as little as possible. They simulate the graph as a physical system. Nodes are electrically charged particles that repulse each other when they get too close. The edges act as springs that attract connected nodes closer together. As a result, nodes are evenly distributed through the chart area, and the layout is intuitive in that nodes which share more connections are closer to each other. The disadvantage of these algorithms is that they are rather slow and therefore less often used in graphs larger than ~1000 vertices. You can set the “weight” parameter which increases the attraction forces among nodes connected by heavier edges.
+```{r}
+l <- layout_with_fr(net.bg)
+plot(net.bg, layout=l)
+```
+You will notice that the layout is not deterministic - different runs will result in slightly different configurations. Saving the layout in l allows us to get the exact same result multiple times, which can be helpful if you want to plot the time evolution of a graph, or different relationships – and want nodes to stay in the same place in multiple plots.
+```{r}
+par(mfrow=c(2,2), mar=c(0,0,0,0)) # plot four figures - 2 rows, 2 columns
+plot(net.bg, layout=layout_with_fr)
+plot(net.bg, layout=layout_with_fr)
+plot(net.bg, layout=l)
+plot(net.bg, layout=l)
+```
+By default, the coordinates of the plots are rescaled to the [-1,1] interval for both x and y. You can change that with the parameter rescale=FALSE and rescale your plot manually by multiplying the coordinates by a scalar. You can use norm_coords to normalize the plot with the boundaries you want.
+```{r}
+l <- layout_with_fr(net.bg)
+l <- norm_coords(l, ymin=-1, ymax=1, xmin=-1, xmax=1)
+
+par(mfrow=c(2,2), mar=c(0,0,0,0))
+plot(net.bg, rescale=F, layout=l*0.4)
+plot(net.bg, rescale=F, layout=l*0.6)
+plot(net.bg, rescale=F, layout=l*0.8)
+plot(net.bg, rescale=F, layout=l*1.0)
+```
+
+Another popular force-directed algorithm that produces nice results for connected graphs is Kamada Kawai. Like Fruchterman Reingold, it attempts to minimize the energy in a spring system.
+```{r}
+l <- layout_with_kk(net.bg)
+plot(net.bg, layout=l)
+```
+All available layouts in igraph:
+```{r}
+layouts <- grep("^layout_", ls("package:igraph"), value=TRUE)[-1]
+# Remove layouts that do not apply to our graph.
+layouts <- layouts[!grepl("bipartite|merge|norm|sugiyama|tree", layouts)]
+layouts
+```
+```{r}
+par(mfrow=c(3,3), mar=c(1,1,1,1))
+for (layout in layouts) {
+#print(layout)
+l <- do.call(layout, list(net))
+plot(net, edge.arrow.mode=0, layout=l, main=layout) }
+```
+
+## Interactive plotting with tkplot
+R and igraph allow for interactive plotting of networks. This might be a useful option for you if you want to tweak slightly the layout of a small graph. After adjusting the layout manually, you can get the coordinates of the nodes and use them for other plots.
+```{r}
+tkid <- tkplot(net) #tkid is the id of the tkplot that will open
+l <- tkplot.getcoords(tkid) # grab the coordinates from tkplot
+tk_close(tkid, window.close = T)
+plot(net, layout=l)
+```
+# Network and node descriptives
+## Density
+
+The proportion of present edges from all possible edges in the network.
+```{r}
+#plot(net)
+edge_density(net, loops=F)
+ecount(net)/(vcount(net)*(vcount(net)-1)) #for a directed network
+```
+## Reciprocity
+The proportion of reciprocated ties (for a directed network).
+```{r}
+reciprocity(net)
+dyad_census(net) # Mutual, asymmetric, and null node pairs
+2*dyad_census(net)$mut/ecount(net) # Calculating reciprocity
+```
+
+
+## Transitivity
+  * global - ratio of triangles (direction disregarded) to connected triples.
+  * local - ratio of triangles to connected triples each vertex is part of.
+```{r}
+transitivity(net, type="global") # net is treated as an undirected network
+transitivity(as.undirected(net, mode="collapse")) # same as above
 ```
 
 ```{r}
+transitivity(net, type="local")
+triad_census(net) # for directed networks
+```
+
+A network diameter is the longest geodesic distance (length of the shortest path between two nodes) in the network. In igraph, diameter() returns the distance, while get_diameter() returns the nodes along the first found path of that distance.  
+Note that edge weights are used by default, unless set to NA.
+```{r}
+diameter(net, directed=F, weights=NA)
 ```
 
 ```{r}
+diameter(net, directed=F)
 ```
+```{r}
+diam <-  get_diameter(net, directed=T)
+diam
+```
+Note that get_diameter() returns a vertex sequence. Note though that when asked to behaved as a vector, a vertex sequence will produce the numeric indexes of the nodes in it. The same applies for edge sequences.
 
 ```{r}
+class(diam)
 ```
+```{r}
+as.vector(diam)
+```
+Color nodes along the diameter:
+```{r}
+vcol <- rep("gray40", vcount(net))
+vcol[diam] <- "gold"
+ecol <- rep("gray80", ecount(net))
+ecol[E(net, path=diam)] <- "orange"
+# E(net, path=diam) finds edges along a path, here 'diam'
+plot(net, vertex.color=vcol, edge.color=ecol, edge.arrow.mode=0)
+```
+## Node degrees
+The function degree() has a mode of in for in-degree, out for out-degree, and all or total for total degree.
+```{r}
+deg <- degree(net, mode="all")
+plot(net, vertex.size=deg*4) # nodes/vertices with higher degrees are larger
+```
+## Dgree distribution
 
 ```{r}
+deg.dist <- degree_distribution(net, cumulative=T, mode="all")
+plot( x=0:max(deg), y=1-deg.dist, pch=19, cex=1.2, col="orange", xlab="Degree", ylab="Cumulative Frequency")
 ```
 
+## Centrality & centralization
+Centrality functions (vertex level) and centralization functions (graph level). The centralization functions return `res` - vertex centrality, `centralization`, and `theoretical_max` - maximum centralization score for a graph of that size. The centrality function can run on a subset of nodes (set with the `vids` parameter). This is helpful for large graphs where calculating all centralities may be a resource-intensive and time-consuming task.  
+
+
+*Degree* (number of ties)
 ```{r}
+degree(net, mode="in")
+centr_degree(net, mode="in", normalized=T)
 ```
-
+*Closeness* (centrality based on distance to others in the graph)  
+Inverse of the node's average geodesic distance to others in the network
 ```{r}
+closeness(net, mode="all", weights=NA)
+centr_clo(net, mode="all", normalized=T)
 ```
 
+*Eigenvector* (centrality proportional to the sum of connection centralities)
+Values of the first eigenvector of the graph matrix.
+```{r}
+eigen_centrality(net, directed=T, weights=NA)
+centr_eigen(net, directed=T, normalized=T)
+```
+Betweenness (centrality based on a broker position connecting others)  
+Number of geodesics that pass through the node or the edge.
+```{r}
+betweenness(net, directed=T, weights=NA)
+edge_betweenness(net, directed=T, weights=NA)
+centr_betw(net, directed=T, normalized=T)
+```
 
